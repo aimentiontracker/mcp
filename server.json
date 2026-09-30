@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.aimentiontracker/mcp",
+  "title": "AIMentionTracker",
+  "description": "Measure how often ChatGPT, Claude, Gemini, Perplexity and Google AI Overviews name and cite your brand, with the answers and sources behind every number.",
+  "version": "0.1.1",
+  "repository": {
+    "url": "https://github.com/aimentiontracker/mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://aimentiontracker.ai",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.aimentiontracker.ai/mcp"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@aimentiontracker/mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "AMT_API_KEY",
+          "description": "An API key from https://app.aimentiontracker.ai/api-keys. Read-only: it cannot change billing, the team, or what is tracked.",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
