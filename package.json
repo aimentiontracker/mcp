@@ -1,14 +1,24 @@
 {
   "name": "@aimentiontracker/mcp",
-  "version": "0.1.1",
-  "description": "MCP server for AIMentionTracker \u2014 how often AI assistants name and cite your brand.",
+  "version": "0.1.3",
+  "description": "Track how often ChatGPT, Claude, Gemini and Perplexity name and cite your brand. Ten read-only MCP tools over AI visibility, share of voice, sentiment and competitor mentions.",
   "keywords": [
     "mcp",
     "modelcontextprotocol",
+    "model-context-protocol",
+    "mcp-server",
     "ai-visibility",
+    "answer-engine-optimization",
+    "aeo",
+    "geo",
+    "generative-engine-optimization",
     "chatgpt",
-    "seo",
-    "geo"
+    "claude",
+    "perplexity",
+    "gemini",
+    "brand-monitoring",
+    "share-of-voice",
+    "seo"
   ],
   "license": "MIT",
   "type": "module",

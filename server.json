@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ai.aimentiontracker/mcp",
   "title": "AIMentionTracker",
-  "description": "Measure how often ChatGPT, Claude, Gemini, Perplexity and Google AI Overviews name and cite your brand, with the answers and sources behind every number.",
-  "version": "0.1.1",
+  "description": "How often ChatGPT, Claude, Gemini and Perplexity name and cite your brand, with the evidence.",
+  "version": "0.1.3",
   "repository": {
     "url": "https://github.com/aimentiontracker/mcp",
     "source": "github"
@@ -19,7 +19,7 @@
     {
       "registryType": "npm",
       "identifier": "@aimentiontracker/mcp",
-      "version": "0.1.1",
+      "version": "0.1.3",
       "transport": {
         "type": "stdio"
       },

@@ -142,6 +142,130 @@ export function registerTools(server: McpServer, client: Client): void {
   )
 
   server.registerTool(
+    "get_current_date",
+    {
+      title: "Today, and the windows every other tool counts back from",
+      description:
+        "The server's current UTC date plus the start of each trailing window (7, 30, 90, 365 days). Call this BEFORE reasoning about dates: a model's idea of 'today' comes from its training data and is routinely months stale, and every other tool here counts backwards from the server's date, not yours. Getting this wrong produces a report confidently labelled with the wrong month.",
+      inputSchema: {},
+      annotations: READ_ONLY,
+    },
+    async () =>
+      call(async () => {
+        const now = new Date()
+        const back = (n: number) => {
+          const d = new Date(now)
+          d.setUTCDate(d.getUTCDate() - n)
+          return d.toISOString().slice(0, 10)
+        }
+        return {
+          utc_now: now.toISOString(),
+          today: now.toISOString().slice(0, 10),
+          windows: { last_7_days: back(7), last_30_days: back(30), last_90_days: back(90), last_365_days: back(365) },
+        }
+      })
+  )
+
+  server.registerTool(
+    "get_sentiment",
+    {
+      title: "How the engines frame each brand, with its denominator",
+      description:
+        "Recommended, negative and neutral counts per brand. THE DENOMINATOR IS `classified`, NOT `answers_naming_them`: the classifier abstains on listicle mentions where an engine named a brand without endorsing it, so classified is usually much smaller, and a share computed against mentions understates every brand. `recommended_share` is null below the sample floor, which means NOT ENOUGH CLASSIFIED MENTIONS and must never be rendered as 0%. There is no single sentiment score and you must not compute one." +
+        RULES,
+      inputSchema: {
+        days: z.number().int().min(1).max(365).optional().describe("Trailing window in days. Default 30."),
+        ...brandArg,
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ days, brand }) =>
+      call(async () => {
+        const r = await client.get("/sentiment", { days, brand })
+        return { brands: r.data, ...r.meta }
+      })
+  )
+
+  server.registerTool(
+    "get_share_of_voice",
+    {
+      title: "Mention share across the brands this workspace tracks",
+      description:
+        "Each tracked brand's mentions as a share of every tracked brand's, in the same answers. THE DENOMINATOR IS THE TRACKED SET, NOT THE MARKET: a workspace tracking two competitors and one tracking twelve produce incomparable numbers from identical answers, so always report `brands_counted` beside any share you quote. `share` is null when no brand was named at all, which is undefined rather than zero." +
+        RULES,
+      inputSchema: {
+        days: z.number().int().min(1).max(365).optional().describe("Trailing window in days. Default 30."),
+        ...brandArg,
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ days, brand }) =>
+      call(async () => {
+        const r = await client.get("/share-of-voice", { days, brand })
+        return { brands: r.data, ...r.meta }
+      })
+  )
+
+  server.registerTool(
+    "list_competitors",
+    {
+      title: "Who gets named instead of you",
+      description:
+        "Competitors ranked by how often the engines named them, with `answers_without_you`: answers that named them and never mentioned you. That is the actionable column, because 'named in 48 answers' is a fact about them and 'named in 47 answers that never mentioned you' is a fact about the customer. Pass quotes=1 for up to three supporting sentences each; leave it off when summarising, or a report becomes a transcript." +
+        RULES,
+      inputSchema: {
+        days: z.number().int().min(1).max(365).optional().describe("Trailing window in days. Default 30."),
+        quotes: z.boolean().optional().describe("Include up to 3 quoted sentences per competitor. Off by default."),
+        ...brandArg,
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ days, quotes, brand }) =>
+      call(async () => {
+        const r = await client.get("/competitors", { days, quotes: quotes ? 1 : undefined, brand })
+        return { competitors: r.data, ...r.meta }
+      })
+  )
+
+  /**
+   * Search Console is gated because the integration is not enabled on every
+   * deployment. A registered tool that always answers 404 is worse than an
+   * absent one: it appears in the agent's tool list as a capability, gets
+   * chosen for a task it cannot do, and spends a turn failing.
+   *
+   * Explicit rather than derived: this process talks to the API over HTTP and
+   * cannot read the app's hasSearchConsole. Set AMT_SEARCH_CONSOLE=1 only
+   * where GSC_CLIENT_ID and friends are set on the API. If the two ever
+   * disagree, both directions are safe — the tool is absent, or it returns
+   * the API's "not enabled on this deployment".
+   */
+  if (process.env.AMT_SEARCH_CONSOLE === "1") {
+  server.registerTool(
+    "list_search_console",
+    {
+      title: "What Google shows, against what the engines read",
+      description:
+        "Pages from the customer's own Search Console joined to the pages AI engines actually cited. `status` is the point: shown_not_cited means Google ranks the page and NO engine has ever read it, which is a structure problem on a named page rather than a reason to write more content; cited_not_shown means the engines read it and Google does not rank it; both means it is working. If `meta.connected` is false there is NO Search Console connection, which is not the same as having no findings and must never be reported as 'no issues' — say it is not connected. Use view=queries for the searches they are genuinely found for, with whether a prompt already tracks each one." +
+        RULES,
+      inputSchema: {
+        view: z.enum(["pages", "queries"]).optional()
+          .describe("pages (default) joins Google against citations; queries lists real search demand."),
+        days: z.number().int().min(1).max(365).optional()
+          .describe("Trailing window in days. Default 28."),
+        ...brandArg,
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ view, days, brand }) =>
+      call(async () => {
+        const r = await client.get("/search-console", { view, days, brand })
+        return { rows: r.data, ...r.meta }
+      })
+  )
+
+  }
+
+  server.registerTool(
     "list_alerts",
     {
       title: "Findings about this brand",

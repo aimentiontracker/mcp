@@ -40,16 +40,22 @@ const server = http.createServer(async (req, res) => {
   /**
    * RFC 9728 protected-resource metadata.
    *
-   * Tells a client that discovers this endpoint WITHOUT a key — the claude.ai
-   * browser connector in particular — which authorization server to talk to.
-   * We do not run OAuth yet, so this points at the app, where a human mints a
-   * key by hand. Publishing it now means a future OAuth rollout is a change of
-   * one document rather than a change of protocol.
+   * NO authorization_servers FIELD, DELIBERATELY. It used to name the app, on
+   * the reasoning that a browser client discovering this endpoint without a
+   * key should be sent somewhere a human could mint one. That is not what the
+   * field means. A client reads it as "there is an RFC 8414 authorization
+   * server at this URL", fetches APP/.well-known/oauth-authorization-server,
+   * gets a 404, and the flow dies three hops in with nothing the user can act
+   * on. We do not run an authorization server, so the honest document omits
+   * the field and the client fails at the 401 below, whose body names the key
+   * page.
+   *
+   * Put the field back the day an RFC 8414 document exists at APP, and not
+   * before. scripts/mcp-e2e.mjs asserts its absence for exactly that reason.
    */
   if (url.pathname === "/.well-known/oauth-protected-resource") {
     return json(res, 200, {
       resource: SELF,
-      authorization_servers: [APP],
       bearer_methods_supported: ["header"],
       resource_documentation: `${APP}/docs`,
     })
