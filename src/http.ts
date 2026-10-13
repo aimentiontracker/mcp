@@ -35,7 +35,10 @@ const server = http.createServer(async (req, res) => {
   // Liveness for the container healthcheck. Deliberately NOT a proxy to the
   // API: this endpoint answers "is this process up", and folding an upstream
   // check into it would restart a healthy container during an API blip.
-  if (url.pathname === "/healthz") return json(res, 200, { ok: true, version: VERSION })
+  // `commit` is what lets a deploy verify THIS container was rebuilt. VERSION
+  // alone could not: it is hardcoded and only moves on a release.
+  if (url.pathname === "/healthz")
+    return json(res, 200, { ok: true, version: VERSION, commit: process.env.GIT_COMMIT ?? "unknown" })
 
   /**
    * RFC 9728 protected-resource metadata.

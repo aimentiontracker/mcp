@@ -1,6 +1,6 @@
 # @aimentiontracker/mcp
 
-Track how often ChatGPT, Claude, Gemini, Perplexity and Google AI Overviews name and cite your brand, from inside your MCP client. Ten read-only tools over AI visibility, share of voice, sentiment and competitor mentions, with the answers they came from.
+Track how often ChatGPT, Claude, Gemini, Perplexity and Google AI Overviews name and cite your brand, from inside your MCP client. Twelve read-only tools over AI visibility, share of voice, sentiment, competitor mentions and what to do about them, with the answers they came from.
 
 This is answer engine optimisation (AEO) data, not rank tracking: the unit is an answer an assistant gave a real question, and whether you were in it.
 
@@ -28,6 +28,7 @@ All read-only. v1 has no write endpoints, deliberately: adding a prompt expands 
 | `get_me` | Who this key is, the plan, and the reporting thresholds. **Call first.** |
 | `get_current_date` | Today in UTC, and the trailing windows every other tool counts back from. **Call before reasoning about dates.** |
 | `list_brands` | Which brands this key can read, and their ids |
+| `list_questions` | The questions this workspace runs, and how many answers each produced. **Call before reading a disappointing number**: it may be the wrong question, not poor visibility |
 | `get_visibility` | Presence per engine and per brand over a window |
 | `get_share_of_voice` | Each tracked brand's mentions as a share of the tracked set |
 | `get_sentiment` | Recommended, negative and neutral counts per brand, against the classified denominator |
@@ -35,6 +36,7 @@ All read-only. v1 has no write endpoints, deliberately: adding a prompt expands 
 | `list_answers` | The stored answers, with mentions and citations |
 | `list_sources` | Domains the engines read before answering |
 | `list_alerts` | Findings worth acting on |
+| `list_recommendations` | What to do next, ranked, with the pages and answers behind each item. **Check `displayable`**: false means the corpus is too thin to rank, not that there is nothing to do |
 
 One further tool, `list_search_console`, registers only where the Google Search Console integration is enabled. A tool that always answers 404 is worse than an absent one: an agent picks it for a task it cannot do and spends a turn failing.
 

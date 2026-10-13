@@ -1,7 +1,7 @@
 {
   "name": "@aimentiontracker/mcp",
-  "version": "0.1.3",
-  "description": "Track how often ChatGPT, Claude, Gemini and Perplexity name and cite your brand. Ten read-only MCP tools over AI visibility, share of voice, sentiment and competitor mentions.",
+  "version": "0.1.4",
+  "description": "Track how often ChatGPT, Claude, Gemini and Perplexity name and cite your brand. Twelve read-only MCP tools over AI visibility, share of voice, sentiment, competitors and what to do about them.",
   "keywords": [
     "mcp",
     "modelcontextprotocol",

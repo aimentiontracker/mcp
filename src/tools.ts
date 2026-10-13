@@ -228,6 +228,58 @@ export function registerTools(server: McpServer, client: Client): void {
   )
 
   /**
+   * THE ONE TOOL THAT ANSWERS "SO WHAT DO I DO".
+   *
+   * Every other tool here measures a surface. This one ranks work, and it is
+   * the reason an agent can be useful rather than merely informative. It was
+   * missing until 13 October while powering a screen in the web app, so an
+   * agent could report that a customer was named in 1 of 121 answers and had
+   * nothing to say about Monday.
+   */
+  server.registerTool(
+    "list_recommendations",
+    {
+      title: "What to do next, ranked, with the evidence",
+      description:
+        "Ranked work with the specific pages and answers behind each item. CHECK `displayable` BEFORE REPORTING: when it is false the list is empty because the corpus is too thin to rank anything honestly, NOT because there is nothing to do, and reporting that as a clean bill of health is the worst mistake available here. Ordered by `tier`, an editorial judgement about whose permission the work needs: your own page outranks a marketplace because nobody has to agree to it. There is no blended score, deliberately. Every row cites pages; an item with nothing to point at is filtered out rather than softened into advice like \"write more content\"." +
+        RULES,
+      inputSchema: {
+        days: z.number().int().min(1).max(365).optional().describe("Trailing window in days. Default 30."),
+        limit: z.number().int().min(1).max(50).optional().describe("How many items. Default 12."),
+        ...brandArg,
+      },
+      annotations: READ_ONLY,
+    },
+    async ({ days, limit, brand }) =>
+      call(async () => {
+        const r = await client.get("/recommendations", { days, limit, brand })
+        return { recommendations: r.data, ...r.meta }
+      })
+  )
+
+  /**
+   * The questions every other number is measured FROM. Without this an agent
+   * cannot tell a poor visibility figure from the wrong question being asked,
+   * and those have opposite fixes.
+   */
+  server.registerTool(
+    "list_questions",
+    {
+      title: "The questions this workspace runs against the engines",
+      description:
+        "The tracked questions, with how many answers each has produced and how many named you. Call this before interpreting a disappointing visibility number: it may mean the wrong question rather than poor visibility, and those have opposite fixes. `web_search_volume` IS NULL WHEN UNCHECKED, not when it is zero, so read `volume_checked_at` before reporting demand. `questions_remaining` in the payload is the plan's allowance across the whole organisation, so a caller can see whether another question is even possible before proposing one." +
+        RULES,
+      inputSchema: { ...brandArg },
+      annotations: READ_ONLY,
+    },
+    async ({ brand }) =>
+      call(async () => {
+        const r = await client.get("/questions", { brand })
+        return { questions: r.data, ...r.meta }
+      })
+  )
+
+  /**
    * Search Console is gated because the integration is not enabled on every
    * deployment. A registered tool that always answers 404 is worse than an
    * absent one: it appears in the agent's tool list as a capability, gets

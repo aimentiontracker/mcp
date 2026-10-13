@@ -23,6 +23,17 @@ ENV NODE_ENV=production
 COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --from=build /srv/dist ./dist
+# THE COMMIT IS BAKED IN SO A DEPLOY CAN PROVE WHICH BUILD IS RUNNING.
+# Without it this container reported only the hardcoded VERSION from
+# client.ts, which changes on release and not on deploy. The result was that
+# a 30 September image served six tools until 9 October while every deploy
+# reported success, because the health gate had no question it could ask.
+#
+# LAST, deliberately: it changes on every commit, so declaring it any earlier
+# would invalidate the npm install layer and reinstall node_modules on every
+# single deploy.
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=$GIT_COMMIT
 # Unprivileged, because this process is reachable from the public internet and
 # has no reason to own anything on disk.
 USER node
